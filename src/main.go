@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"fmt"
 	"os"
+	"strconv"
 	"strings"
 	"time"
 )
@@ -32,8 +33,21 @@ func (db *DataBase) addTask(t Task) Task {
 	t.id = db.nextID
 	t.createdAt = time.Now()
 	db.tasks = append(db.tasks, t)
+	fmt.Printf("Task added successfully (ID: %v) \n", db.nextID)
 	db.nextID++
 	return t
+}
+
+func (db *DataBase) updateTask(t Task) bool {
+	for i, task := range db.tasks {
+		if task.id == t.id {
+			db.tasks[i] = t
+			fmt.Printf("New Task description: %v \n", db.tasks[i].description)
+			return true
+		}
+	}
+
+	return false
 }
 
 func main() {
@@ -54,18 +68,28 @@ func main() {
 		input, err := reader.ReadString('\n')
 
 		if err != nil {
-			fmt.Println("Erro ao ler a entrada:", err)
+			fmt.Println("Error reading input:", err)
 			continue
 		}
+
 		cleanInput := strings.TrimSpace(input)
-		parts := strings.SplitN(cleanInput, " ", 2)
+		parts := strings.SplitN(cleanInput, " ", 3)
 		comand := parts[0]
 
 		switch comand {
 
 		case "add":
 			db.addTask(Task{description: parts[1]})
+
 		case "update":
+
+			id, err1 := strconv.Atoi(parts[1])
+			if err1 != nil {
+				fmt.Printf("Error converting to int %v \n", err1)
+				continue
+			}
+			db.updateTask(Task{id: id, description: parts[2]})
+
 		case "delete":
 		case "mark-in-progress":
 		case "mark-done":
@@ -75,8 +99,10 @@ func main() {
 		case "list in-progress":
 
 		case "exit":
-			fmt.Println("Saindo da aplicação...")
+			fmt.Println("Quitting an application...")
 			return
+		default:
+			fmt.Println("Unknown command, type help to see the list of supported commands.")
 		}
 
 	}
